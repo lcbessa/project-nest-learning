@@ -6,6 +6,8 @@ import {
   Patch,
   Param,
   Delete,
+  NotFoundException,
+  HttpCode,
 } from '@nestjs/common';
 import { ProdutosService } from './produtos.service';
 import { CreateProdutoDto } from './dto/create-produto.dto';
@@ -26,17 +28,32 @@ export class ProdutosController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.produtosService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    const produto = await this.produtosService.findOne(id);
+    if (!produto) {
+      throw new NotFoundException('Produto não encontrado!');
+    }
+    return produto;
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProdutoDto: UpdateProdutoDto) {
-    return this.produtosService.update(+id, updateProdutoDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateProdutoDto: UpdateProdutoDto,
+  ) {
+    const produto = await this.produtosService.update(id, updateProdutoDto);
+    if (!produto) {
+      throw new NotFoundException('Produto não encontrado!');
+    }
+    return produto;
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.produtosService.remove(+id);
+  @HttpCode(204)
+  async remove(@Param('id') id: string) {
+    const produto = await this.produtosService.remove(id);
+    if (!produto) {
+      throw new NotFoundException('Produto não encontrado!');
+    }
   }
 }

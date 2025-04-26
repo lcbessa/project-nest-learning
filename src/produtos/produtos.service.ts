@@ -1,26 +1,41 @@
 import { Injectable } from '@nestjs/common';
 import { CreateProdutoDto } from './dto/create-produto.dto';
 import { UpdateProdutoDto } from './dto/update-produto.dto';
+import { Repository } from 'typeorm';
+import { Produto } from './entities/produto.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class ProdutosService {
-  create(createProdutoDto: CreateProdutoDto) {
-    return 'This action adds a new produto';
+  // Injeção de dependência do repositório de produtos
+  constructor(
+    @InjectRepository(Produto)
+    private readonly repository: Repository<Produto>,
+  ) {}
+
+  create(dto: CreateProdutoDto) {
+    const produto = this.repository.create(dto);
+    return this.repository.save(produto);
   }
 
   findAll() {
-    return `This action returns all produtos`;
+    return this.repository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} produto`;
+  findOne(id: string) {
+    return this.repository.findOneBy({ id });
   }
 
-  update(id: number, updateProdutoDto: UpdateProdutoDto) {
-    return `This action updates a #${id} produto`;
+  async update(id: string, dto: UpdateProdutoDto) {
+    const produto = await this.repository.findOneBy({ id });
+    if (!produto) return null;
+    this.repository.merge(produto, dto);
+    return this.repository.save(produto);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} produto`;
+  async remove(id: string) {
+    const produto = await this.repository.findOneBy({ id });
+    if (!produto) return null;
+    return this.repository.remove(produto);
   }
 }
